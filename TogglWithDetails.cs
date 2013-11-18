@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization;
@@ -19,7 +20,7 @@ namespace TogglAPI
 
         abstract protected string DetailsUrl { get; }
 
-        public T GetDetails<T>(string ApiToken, string Password = "api_token", string RequestUrl = null)
+        public T GetDetails<T>(string ApiToken, string Password = "api_token", string RequestUrl = null, string query = null)
         {
             if (RequestUrl == null)
                 RequestUrl = DetailsUrl;
@@ -30,8 +31,13 @@ namespace TogglAPI
             {
                 try
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Get,
-                        String.Format(RequestUrl, this.Id));
+                    UriBuilder uri = new UriBuilder(string.Format(RequestUrl, this.Id));
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        uri.Query = WebUtility.UrlEncode(query);//.Replace("%3D", "=");//.Replace("%26", "&");
+                        uri.Query = uri.Query.Replace("%3D", "="); //.Replace("%26", "&");
+                    }
+                    var request = new HttpRequestMessage(HttpMethod.Get, uri.Uri);
                     //request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     request.Headers.Authorization = new AuthenticationHeaderValue(
                         AuthenticationType,
